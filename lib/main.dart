@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
         title: 'Namer App',
         theme: ThemeData(
           useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurpleAccent),
         ),
         home: MyHomePage(),
       ),
@@ -33,13 +33,23 @@ class MyAppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  var favorites = <WordPair>[];
+  var favorite = <WordPair>[];
 
   void toggleFavorite() {
-    if (favorites.contains(current)) {
-      favorites.remove(current);
+    if (favorite.contains(current)) {
+      favorite.remove(current);
     } else {
-      favorites.add(current);
+      favorite.add(current);
+    }
+    notifyListeners();
+  }
+
+  var block = <WordPair>[];
+  void toggleBlock() {
+    if (block.contains(current)) {
+      block.remove(current);
+    } else {
+      block.add(current);
     }
     notifyListeners();
   }
@@ -63,6 +73,9 @@ class _MyHomePageState extends State<MyHomePage> {
       case 1:
         page = FavoritesPage();
         break;
+      case 2:
+        page = BlockedPage();
+        break;
       default:
         throw UnimplementedError('no widget for $selectedIndex');
     }
@@ -79,8 +92,12 @@ class _MyHomePageState extends State<MyHomePage> {
                     label: Text('Home'),
                   ),
                   NavigationRailDestination(
-                    icon: Icon(Icons.favorite),
-                    label: Text('Favorites'),
+                    icon: Icon(Icons.thumb_up_alt),
+                    label: Text('Liked'),
+                  ),
+                  NavigationRailDestination(
+                    icon: Icon(Icons.thumb_down_alt),
+                    label: Text('Disliked'),
                   ),
                 ],
                 selectedIndex: selectedIndex,
@@ -110,13 +127,17 @@ class GeneratorPage extends StatelessWidget {
     var appState = context.watch<MyAppState>();
     var pair = appState.current;
 
-    IconData icon;
-    if (appState.favorites.contains(pair)) {
-      icon = Icons.favorite;
+    IconData icon1,icon2;
+    if (appState.favorite.contains(pair)) {
+      icon1 = Icons.thumb_up_alt;
     } else {
-      icon = Icons.favorite_border;
+      icon1 = Icons.thumb_up_off_alt;
     }
-
+    if (appState.block.contains(pair)) {
+       icon2 = Icons.thumb_down_alt;
+     } else {
+       icon2 = Icons.thumb_down_off_alt;
+     }
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -130,8 +151,16 @@ class GeneratorPage extends StatelessWidget {
                 onPressed: () {
                   appState.toggleFavorite();
                 },
-                icon: Icon(icon),
+                icon: Icon(icon1),
                 label: Text('Like'),
+              ),
+              SizedBox(width: 10),
+              ElevatedButton.icon(
+                onPressed: () {
+                  appState.toggleBlock();
+                },
+                icon: Icon(icon2),
+                label: Text('Disliked'),
               ),
               SizedBox(width: 10),
               ElevatedButton(
@@ -184,7 +213,7 @@ class FavoritesPage extends StatelessWidget {
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
 
-    if (appState.favorites.isEmpty) {
+    if (appState.favorite.isEmpty) {
       return Center(
         child: Text('No favorites yet.'),
       );
@@ -195,11 +224,39 @@ class FavoritesPage extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.all(20),
           child: Text('You have '
-              '${appState.favorites.length} favorites:'),
+              '${appState.favorite.length} favorites:'),
         ),
-        for (var pair in appState.favorites)
+        for (var pair in appState.favorite)
           ListTile(
             leading: Icon(Icons.favorite),
+            title: Text(pair.asLowerCase),
+          ),
+      ],
+    );
+  }
+}
+
+class BlockedPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+
+    if (appState.block.isEmpty) {
+      return Center(
+        child: Text('No words are blocked yet.'),
+      );
+    }
+
+    return ListView(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(20),
+          child: Text('You have '
+              '${appState.favorite.length} blocked words:'),
+        ),
+        for (var pair in appState.block)
+          ListTile(
+            leading: Icon(Icons.block),
             title: Text(pair.asLowerCase),
           ),
       ],
